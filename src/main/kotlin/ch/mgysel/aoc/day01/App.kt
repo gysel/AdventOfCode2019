@@ -7,7 +7,7 @@ fun calculateRequiredFuel(mass: Int): Int {
 }
 
 fun main() {
-    val data = InputData.read("day01/input.txt")
+    val data = InputData.readLines("day01-input.txt")
     // part one
     val sum = data
             .map(String::toInt)
