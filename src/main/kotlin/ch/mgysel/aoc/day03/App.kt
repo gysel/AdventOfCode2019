@@ -1,6 +1,7 @@
 package ch.mgysel.aoc.day03
 
 import ch.mgysel.aoc.common.InputData
+import java.util.concurrent.atomic.AtomicInteger
 import kotlin.math.absoluteValue
 
 fun main() {
@@ -10,40 +11,51 @@ fun main() {
     val origin = Coordinates(0, 0)
     data.forEachIndexed() { cable, moves ->
         var position = origin
+        val length = AtomicInteger(0)
         moves.forEach { move ->
+            val direction = parseDirection(move.first())
             val count = move.drop(1).toInt()
-            val direction = when (move.first()) {
-                'L' -> Direction.LEFT
-                'R' -> Direction.RIGHT
-                'U' -> Direction.UP
-                'D' -> Direction.DOWN
-                else -> throw IllegalStateException("Unexpected direction!")
-            }
-            position = Field.add(position, direction, count, cable)
+            position = Field.add(position, direction, count, cable, length)
         }
     }
     val intersections = Field.findIntersections()
-    println("Intersections: $intersections")
-    val resultOne = intersections.map { calculateManhattanDistance(origin, it) }.min()
+    println("Intersections: ${intersections.size}")
+    val resultOne = intersections.map { intersection -> calculateManhattanDistance(origin, intersection.key) }.min()
     println("part one: $resultOne")
     // part two
-    val resultTwo = "todo"
+    val resultTwo = intersections.map { it.key to it.value.map(CableWaypoint::cableLength).sum() }
+            .minBy { it.second }
+            ?.let { it.second }
+            ?: throw IllegalStateException("No minimum found!")
+
     println("part two: $resultTwo")
 }
 
-object Field {
-    private val points: MutableMap<Coordinates, MutableSet<Int>> = mutableMapOf()
+private fun parseDirection(character: Char): Direction {
+    return when (character) {
+        'L' -> Direction.LEFT
+        'R' -> Direction.RIGHT
+        'U' -> Direction.UP
+        'D' -> Direction.DOWN
+        else -> throw IllegalStateException("Unexpected direction!")
+    }
+}
 
-    fun findIntersections(): Set<Coordinates> {
-        return points.filter { it.value.size > 1 }.keys
+object Field {
+    private val points: MutableMap<Coordinates, MutableSet<CableWaypoint>> = mutableMapOf()
+
+    fun findIntersections(): Map<Coordinates, Set<CableWaypoint>> {
+        return points.filter { point ->
+            point.value.map(CableWaypoint::cable).distinct().size > 1
+        }
     }
 
-    fun add(start: Coordinates, direction: Direction, count: Int, cable: Int): Coordinates {
+    fun add(start: Coordinates, direction: Direction, count: Int, cable: Int, length: AtomicInteger): Coordinates {
         var position = start
         repeat(count) {
             position = position.move(direction)
             val cables = points.getOrDefault(position, mutableSetOf())
-            cables.add(cable)
+            cables.add(CableWaypoint(cable, length.incrementAndGet()))
             points[position] = cables
         }
         return position
@@ -67,3 +79,6 @@ data class Coordinates(val x: Int,
 fun calculateManhattanDistance(a: Coordinates, b: Coordinates): Int {
     return (a.x - b.x).absoluteValue + (a.y - b.y).absoluteValue
 }
+
+data class CableWaypoint(val cable: Int,
+                         val cableLength: Int)
