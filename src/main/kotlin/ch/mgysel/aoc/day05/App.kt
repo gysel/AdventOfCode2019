@@ -7,21 +7,21 @@ fun main() {
     val data = InputData.read("day05-input.txt")
             .split(",")
             .map(String::toInt)
-    val program = data.toMutableList()
-    runProgram(program, 1)
-
-    println("part one is done")
+    val output = runProgram(data.toMutableList(), 1)
+    println("part one: $output")
 
     // part two
-    val resultTwo = "TODO"
+    val resultTwo = runProgram(data.toMutableList(), 5)
     println("part two: $resultTwo")
 }
 
 
-fun runProgram(program: MutableList<Int>, input: Int): List<Int> {
+fun runProgram(program: MutableList<Int>, input: Int): Int? {
     var pointer = 0
+    var output: Int? = null
     while (true) {
         val instruction = parseInstruction(program[pointer])
+        var nextPointer = pointer + instruction.code.length
         when (instruction.code) {
             OpCode.PLUS -> runInstruction(program, pointer, Int::plus, instruction)
             OpCode.MULTIPLY -> runInstruction(program, pointer, Int::times, instruction)
@@ -31,11 +31,43 @@ fun runProgram(program: MutableList<Int>, input: Int): List<Int> {
             }
             OpCode.OUTPUT -> {
                 val source = calculatePosition(instruction, 1, program, pointer)
-                println("Output: ${program[source]}")
+                output = program[source]
             }
-            OpCode.STOP -> return program
+            OpCode.JUMP_IF_TRUE -> {
+                val test = calculatePosition(instruction, 1, program, pointer)
+                if (program[test] != 0) {
+                    nextPointer = program[calculatePosition(instruction, 2, program, pointer)]
+                }
+            }
+            OpCode.JUMP_IF_FALSE -> {
+                val test = calculatePosition(instruction, 1, program, pointer)
+                if (program[test] == 0) {
+                    nextPointer = program[calculatePosition(instruction, 2, program, pointer)]
+                }
+            }
+            OpCode.LESS_THAN -> {
+                val first = calculatePosition(instruction, 1, program, pointer)
+                val second = calculatePosition(instruction, 2, program, pointer)
+                val destination = calculatePosition(instruction, 3, program, pointer)
+                program[destination] = if (program[first] < program[second]) {
+                    1
+                } else {
+                    0
+                }
+            }
+            OpCode.EQUALS -> {
+                val first = calculatePosition(instruction, 1, program, pointer)
+                val second = calculatePosition(instruction, 2, program, pointer)
+                val destination = calculatePosition(instruction, 3, program, pointer)
+                program[destination] = if (program[first] == program[second]) {
+                    1
+                } else {
+                    0
+                }
+            }
+            OpCode.STOP -> return output
         }
-        pointer += instruction.code.length
+        pointer = nextPointer
     }
 }
 
@@ -61,8 +93,12 @@ fun parseInstruction(instruction: Int): Instruction {
         2 -> OpCode.MULTIPLY
         3 -> OpCode.INPUT
         4 -> OpCode.OUTPUT
+        5 -> OpCode.JUMP_IF_TRUE
+        6 -> OpCode.JUMP_IF_FALSE
+        7 -> OpCode.LESS_THAN
+        8 -> OpCode.EQUALS
         99 -> OpCode.STOP
-        else -> throw IllegalStateException("Unexpected OpCode")
+        else -> throw IllegalStateException("Unexpected OpCode $string")
     }
     val modes = string.dropLast(2).reversed().map {
         when (it) {
@@ -93,5 +129,9 @@ enum class OpCode(val length: Int) {
     MULTIPLY(4),
     INPUT(2),
     OUTPUT(2),
-    STOP(1)
+    STOP(1),
+    JUMP_IF_TRUE(3),
+    JUMP_IF_FALSE(3),
+    LESS_THAN(4),
+    EQUALS(4)
 }
