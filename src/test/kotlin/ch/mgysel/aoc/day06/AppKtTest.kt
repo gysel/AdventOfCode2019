@@ -30,6 +30,33 @@ class AppKtTest {
         map.countOrbits("D") shouldBe 3
         map.countOrbits("L") shouldBe 7
         map.countOrbits("COM") shouldBe 0
-        map.countAlOrbits() shouldBe 42
+        map.countAllOrbits() shouldBe 42
+    }
+
+    private val santaSample = """
+            COM)B
+            B)C
+            C)D
+            D)E
+            E)F
+            B)G
+            G)H
+            D)I
+            E)J
+            J)K
+            K)L
+            K)YOU
+            I)SAN
+            """.trimIndent()
+            .lines()
+            .filter(String::isNotEmpty)
+
+    @Test
+    fun santaTransfer() {
+        val data = santaSample
+                .map(::parseLine)
+
+        val map = OrbitMap(data)
+        map.calculateTransfer("YOU", "SAN") shouldBe 4
     }
 }
