@@ -24,39 +24,34 @@ fun parseLine(line: String): Relationship {
 
 class OrbitMap(relationships: List<Relationship>) {
 
-    private val distanceToCOM: Map<String, Int>
     private val objectsByName: Map<String, Object>
 
     init {
-        val distances = mutableMapOf<String, Int>()
-        val objects = mutableMapOf<String, Object>()
-        create(null, relationships, "COM", 0, distances, objects)
-        distanceToCOM = distances
-        objectsByName = objects
+        objectsByName = create(null, relationships, "COM", 0)
+                .associateBy(Object::name)
     }
 
-    private fun create(orbiting: Object?, relationships: List<Relationship>, name: String, currentDistance: Int, distances: MutableMap<String, Int>, objects: MutableMap<String, Object>) {
-        distances[name] = currentDistance
-        val newObject = Object(name, orbiting)
-        relationships
+    private fun create(orbiting: Object?, relationships: List<Relationship>, name: String, currentDistance: Int): Sequence<Object> {
+        val newObject = Object(name, currentDistance, orbiting)
+        return sequenceOf(newObject) + relationships
                 .asSequence()
                 .filter { relationship ->
                     relationship.center == name
                 }
-                .forEach { relationship ->
-                    create(newObject, relationships, relationship.orbiter, currentDistance + 1, distances, objects)
+                .flatMap { relationship ->
+                    create(newObject, relationships, relationship.orbiter, currentDistance + 1)
                 }
-        objects[name] = newObject
     }
 
-    fun countOrbits(name: String) = distanceToCOM[name]
-    fun countAllOrbits() = distanceToCOM.values.sum()
+    fun countOrbits(name: String) = objectsByName[name]?.distanceToCOM
+    fun countAllOrbits() = objectsByName.values.map(Object::distanceToCOM).sum()
     fun calculateTransfer(from: String, to: String): Int {
         val first = objectsByName[from]?.orbiting ?: throw IllegalStateException("$from is not in an orbit!")
         val second = objectsByName[to]?.orbiting ?: throw IllegalStateException("$to is not in an orbit!")
         val commonPath = findPathFromCom(first).zip(findPathFromCom(second))
                 .filter { pair ->
-                    pair.first.name == pair.second.name }
+                    pair.first.name == pair.second.name
+                }
                 .dropLast(1) // the last node of the common path is required for travelling
         return findPathFromCom(first).size + findPathFromCom(second).size - (2 * commonPath.size)
     }
@@ -74,7 +69,8 @@ class OrbitMap(relationships: List<Relationship>) {
 }
 
 data class Object(val name: String,
-             val orbiting: Object?)
+                  val distanceToCOM: Int,
+                  val orbiting: Object?)
 
 data class Relationship(val center: String,
                         val orbiter: String)
