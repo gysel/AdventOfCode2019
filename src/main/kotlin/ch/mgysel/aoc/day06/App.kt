@@ -24,15 +24,15 @@ fun parseLine(line: String): Relationship {
 
 class OrbitMap(relationships: List<Relationship>) {
 
-    private val objectsByName: Map<String, Object>
+    private val objectsByName: Map<String, SpaceObject>
 
     init {
         objectsByName = create(null, relationships, "COM", 0)
-                .associateBy(Object::name)
+                .associateBy(SpaceObject::name)
     }
 
-    private fun create(orbiting: Object?, relationships: List<Relationship>, name: String, currentDistance: Int): Sequence<Object> {
-        val newObject = Object(name, currentDistance, orbiting)
+    private fun create(orbiting: SpaceObject?, relationships: List<Relationship>, name: String, currentDistance: Int): Sequence<SpaceObject> {
+        val newObject = SpaceObject(name, currentDistance, orbiting)
         return sequenceOf(newObject) + relationships
                 .asSequence()
                 .filter { relationship ->
@@ -44,7 +44,7 @@ class OrbitMap(relationships: List<Relationship>) {
     }
 
     fun countOrbits(name: String) = objectsByName[name]?.distanceToCOM
-    fun countAllOrbits() = objectsByName.values.map(Object::distanceToCOM).sum()
+    fun countAllOrbits() = objectsByName.values.map(SpaceObject::distanceToCOM).sum()
     fun calculateTransfer(from: String, to: String): Int {
         val first = objectsByName[from]?.orbiting ?: throw IllegalStateException("$from is not in an orbit!")
         val second = objectsByName[to]?.orbiting ?: throw IllegalStateException("$to is not in an orbit!")
@@ -56,8 +56,8 @@ class OrbitMap(relationships: List<Relationship>) {
         return findPathFromCom(first).size + findPathFromCom(second).size - (2 * commonPath.size)
     }
 
-    private fun findPathFromCom(first: Object): List<Object> {
-        val result = mutableListOf<Object>()
+    private fun findPathFromCom(first: SpaceObject): List<SpaceObject> {
+        val result = mutableListOf<SpaceObject>()
         var orbiting = first.orbiting
         while (orbiting != null) {
             result.add(orbiting)
@@ -68,9 +68,9 @@ class OrbitMap(relationships: List<Relationship>) {
 
 }
 
-data class Object(val name: String,
-                  val distanceToCOM: Int,
-                  val orbiting: Object?)
+data class SpaceObject(val name: String,
+                       val distanceToCOM: Int,
+                       val orbiting: SpaceObject?)
 
 data class Relationship(val center: String,
                         val orbiter: String)
