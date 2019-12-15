@@ -3,6 +3,13 @@ package ch.mgysel.aoc.day07
 import ch.mgysel.aoc.common.InputData
 import ch.mgysel.aoc.common.permute
 import java.util.*
+import java.util.concurrent.Executors
+import java.util.concurrent.LinkedBlockingQueue
+
+fun verifySolution(actual: Int, expected: Int, part: String) {
+    if (actual != expected)
+        throw IllegalStateException("$part is wrong. Expected $expected but was $actual")
+}
 
 fun main() {
     // part one
@@ -10,34 +17,65 @@ fun main() {
             .split(",")
             .map(String::toInt)
 
+    val maxOutput = solvePartOne(program)
+    verifySolution(maxOutput.signal, 67023, "part one")
+
+    println("part one: $maxOutput")
+
+    // part two
+    val pool = Executors.newFixedThreadPool(5)
+    val resultTwo = permute((5..9).toList())
+            .map { settings ->
+                // prepare initial settings
+                val handovers = (0..4).map { i -> LinkedBlockingQueue<Int>(listOf(settings[i])) }
+                // add initial value to first amplifier
+                handovers.first().add(0)
+                // run 5 programs in parallel
+                val programs: List<Runnable> = ('A'..'E').mapIndexed { i, _ ->
+                    Runnable {
+                        runProgram(program, {
+                            handovers[i].take()
+                        }) {
+                            handovers[(i + 1) % 5].put(it)
+                        }
+                    }
+                }
+                programs.map(pool::submit).forEach { it.get() }
+                // read the last signal from the handover of E -> A
+                val signal = handovers.first().first()
+                Combination(settings, signal)
+            }
+            .maxBy(Combination::signal)
+            ?: throw IllegalStateException("no max found!!")
+
+    println("part two: $resultTwo")
+    verifySolution(resultTwo.signal, 7818398, "part two")
+}
+
+
+private fun solvePartOne(program: List<Int>): Combination {
     val settingsSets = permute((0..4).toList())
-    val maxOutput = settingsSets
+    return settingsSets
             .map { settings ->
                 val signal = settings.fold(0) { previousOutput, parameter ->
                     val inputs = listOf(parameter, previousOutput)
-                    runProgram(program, inputs)
-                            ?: throw IllegalStateException("No output found!")
+                    val inputQueue = LinkedList(inputs)
+                    var output: Int? = null
+                    runProgram(program, { inputQueue.pop() }, { output = it })
+                    output ?: throw IllegalStateException("No output found!")
                 }
                 Combination(settings, signal)
-            }.maxBy(Combination::signal)
-
-    val output = "$maxOutput"
-    println("part one: $output")
-
-    // part two
-    val resultTwo = "TODO"
-    println("part two: $resultTwo")
+            }.maxBy(Combination::signal) ?: throw IllegalStateException("No maximum found!")
 }
 
 data class Combination(val settings: List<Int>,
                        val signal: Int)
 
 
-fun runProgram(inputProgram: List<Int>, inputs: List<Int>): Int? {
+fun runProgram(inputProgram: List<Int>, readInput: () -> Int, writeOutput: (Int) -> Unit) {
     val program = inputProgram.toMutableList()
-    val inputQueue = LinkedList(inputs)
+
     var pointer = 0
-    var output: Int? = null
     while (true) {
         val instruction = parseInstruction(program[pointer])
         var nextPointer = pointer + instruction.code.length
@@ -46,11 +84,11 @@ fun runProgram(inputProgram: List<Int>, inputs: List<Int>): Int? {
             OpCode.MULTIPLY -> runInstruction(program, pointer, Int::times, instruction)
             OpCode.INPUT -> {
                 val destination = calculatePosition(instruction, 1, program, pointer)
-                program[destination] = inputQueue.pop()
+                program[destination] = readInput()
             }
             OpCode.OUTPUT -> {
                 val source = calculatePosition(instruction, 1, program, pointer)
-                output = program[source]
+                writeOutput(program[source])
             }
             OpCode.JUMP_IF_TRUE -> {
                 val test = calculatePosition(instruction, 1, program, pointer)
@@ -84,7 +122,7 @@ fun runProgram(inputProgram: List<Int>, inputs: List<Int>): Int? {
                     0
                 }
             }
-            OpCode.STOP -> return output
+            OpCode.STOP -> return
         }
         pointer = nextPointer
     }
