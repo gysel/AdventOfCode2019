@@ -50,6 +50,7 @@ fun main() {
 
     println("part two: $resultTwo")
     verifySolution(resultTwo.signal, 7818398, "part two")
+    pool.shutdown()
 }
 
 
