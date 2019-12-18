@@ -2,7 +2,7 @@ package ch.mgysel.aoc.day07
 
 import ch.mgysel.aoc.common.InputData
 import ch.mgysel.aoc.common.permute
-import ch.mgysel.aoc.common.verifySolution
+import ch.mgysel.aoc.common.verify
 import java.util.*
 import java.util.concurrent.Executors
 import java.util.concurrent.LinkedBlockingQueue
@@ -14,7 +14,7 @@ fun main() {
             .map(String::toInt)
 
     val maxOutput = solvePartOne(program)
-    verifySolution(maxOutput.signal, 67023, "part one")
+    verify(maxOutput.signal, 67023, "part one")
 
     println("part one: $maxOutput")
 
@@ -45,7 +45,7 @@ fun main() {
             ?: throw IllegalStateException("no max found!!")
 
     println("part two: $resultTwo")
-    verifySolution(resultTwo.signal, 7818398, "part two")
+    verify(resultTwo.signal, 7818398, "part two")
     pool.shutdown()
 }
 
