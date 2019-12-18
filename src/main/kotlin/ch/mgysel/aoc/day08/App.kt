@@ -18,11 +18,27 @@ fun main() {
 
     val resultOne = layer.count(1) * layer.count(2)
     println("part one: $resultOne")
+    verify(resultOne, 1862, "part one")
 
     // part two
-    val resultTwo = "TODO"
+    val merged = mergeLayers(layers)
 
-    println("part two: $resultTwo")
+    println("part two:")
+    printImage(merged, width)
+}
+
+private fun printImage(merged: List<Int>, width: Int) {
+    println()
+    merged.chunked(width)
+            .map { line -> line.joinToString("") { if (it == 0) " " else "X" } }
+            .forEach(::println)
+    println()
+}
+
+fun mergeLayers(layers: List<List<Int>>): List<Int> {
+    return (layers.first().indices).map { i ->
+        layers.map { it[i] }.first { it != 2 }
+    }
 }
 
 private fun List<Int>.count(number: Int) = this.count { it == number }
