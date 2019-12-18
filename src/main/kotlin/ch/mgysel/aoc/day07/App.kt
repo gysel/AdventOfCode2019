@@ -2,14 +2,10 @@ package ch.mgysel.aoc.day07
 
 import ch.mgysel.aoc.common.InputData
 import ch.mgysel.aoc.common.permute
+import ch.mgysel.aoc.common.verifySolution
 import java.util.*
 import java.util.concurrent.Executors
 import java.util.concurrent.LinkedBlockingQueue
-
-fun verifySolution(actual: Int, expected: Int, part: String) {
-    if (actual != expected)
-        throw IllegalStateException("$part is wrong. Expected $expected but was $actual")
-}
 
 fun main() {
     // part one
