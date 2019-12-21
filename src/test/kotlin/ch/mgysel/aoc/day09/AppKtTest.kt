@@ -25,7 +25,7 @@ class AppKtTest {
 
     @Test
     fun exampleOne() {
-        val code = listOf(
+        val code = listOf<Long>(
                 109, 1, // set relative base to 1
                 204, -1, // output with relative mode
                 1001, 100, 1, 100,
@@ -38,26 +38,24 @@ class AppKtTest {
 
     @Test
     fun exampleTwo() {
-        val code = listOf(1102, 34915192, 34915192, 7, 4, 7, 99, 0)
+        val code = listOf<Long>(1102, 34915192, 34915192, 7, 4, 7, 99, 0)
         val program = Program(code)
         program.run().first().toString() shouldHaveLength 16
     }
 
     @Test
     fun exampleThree() {
-        // TODO use 1125899906842624
-        val number = 555555555
+        val number = 1125899906842624L
         val code = listOf(104, number, 99)
         val program = Program(code)
         program.run().first() shouldBe number
     }
 
     @Test
-    @Ignore
     fun partOne() {
-//    private val code = parseInput()
-//    private val program = Program(code)
-        TODO()
+        val code = parseInput()
+        val program = Program(code)
+        program.run(1) shouldBe 3906448201
     }
 
     @Test

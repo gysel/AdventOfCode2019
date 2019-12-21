@@ -26,22 +26,26 @@ fun parseInput(): List<Int> = InputData.read("day07-input.txt")
         .map(String::toInt)
 
 
-fun solvePartOne(program: Program): Combination {
+fun solvePartOne(program: Program<Int>): Combination {
     val settingsSets = permute((0..4).toList())
     return settingsSets
             .map { settings ->
-                val signal = settings.fold(0) { previousOutput, parameter ->
-                    val inputs = listOf(parameter, previousOutput)
-                    val inputQueue = LinkedList(inputs)
-                    var output: Int? = null
-                    program.run({ inputQueue.pop() }, { output = it })
-                    output ?: throw IllegalStateException("No output found!")
-                }
-                Combination(settings, signal)
+                runProgram(settings, program)
             }.maxBy(Combination::signal) ?: throw IllegalStateException("No maximum found!")
 }
 
- fun solvePartTwo(program: Program): Combination {
+fun runProgram(settings: List<Int>, program: Program<Int>): Combination {
+    val signal = settings.fold(0) { previousOutput, parameter ->
+        val inputs = listOf(parameter, previousOutput)
+        val inputQueue = LinkedList(inputs)
+        var output: Int? = null
+        program.run({ inputQueue.pop() }, { output = it.toInt() })
+        output ?: throw IllegalStateException("No output found!")
+    }
+    return Combination(settings, signal)
+}
+
+fun solvePartTwo(program: Program<Int>): Combination {
     val pool = Executors.newFixedThreadPool(5)
     val resultTwo = permute((5..9).toList())
             .map { settings ->
@@ -55,7 +59,7 @@ fun solvePartOne(program: Program): Combination {
                         program.run({
                             handovers[i].take()
                         }) {
-                            handovers[(i + 1) % 5].put(it)
+                            handovers[(i + 1) % 5].put(it.toInt())
                         }
                     }
                 }

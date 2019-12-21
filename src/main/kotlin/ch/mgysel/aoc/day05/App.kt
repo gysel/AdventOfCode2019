@@ -16,8 +16,8 @@ fun main() {
     println("part two: $resultTwo")
 }
 
-fun solve(program: Program, input: Int): Int? {
-    return program.run(input)
+fun solve(program: Program<Int>, input: Int): Int? {
+    return program.run(input)?.toInt()
 }
 
 fun readInput(): List<Int> = InputData.read("day05-input.txt")

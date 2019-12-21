@@ -1,68 +1,79 @@
 package ch.mgysel.aoc.common
 
-class Program(private val code: List<Int>) {
+import java.util.*
+
+class Program<T : Number>(code: List<T>) {
+    private val code: List<Long> = code.map { it.toLong() }
 
     private val noInput = { throw IllegalStateException("No input expected") }
 
-    fun run(): List<Int> {
-        val result = mutableListOf<Int>()
+    fun run(): List<Long> {
+        val result = mutableListOf<Long>()
         run(noInput, { result.add(it) })
         return result
     }
 
-    fun run(input: Int): Int? {
-        var result: Int? = null
+    fun run(input: List<T>): List<Long> {
+        val result = mutableListOf<Long>()
+        val inputQueue = LinkedList(input)
+        run(inputQueue::pop) { result.add(it) }
+        return result
+    }
+
+    fun run(input: T): Long? {
+        var result: Long? = null
         run({ input }, { result = it })
         return result
     }
 
-    fun run(readInput: () -> Int, writeOutput: (Int) -> Unit) {
-        val memory = code.toMutableList()
+    fun run(readInput: () -> T, writeOutput: (Long) -> Unit) {
+        val memory = code.mapIndexed { i, v -> i to v }
+                .toMap().toMutableMap()
 
         var pointer = 0
         var relativeBase = 0
         while (true) {
-            val instruction = parseInstruction(memory[pointer])
+            val instruction = parseInstruction(memory[pointer]!!)
             var nextPointer = pointer + instruction.code.length
-            val calculatePosition = { index: Int ->
+            val calculatePosition: (Int) -> Int = { index ->
                 when (instruction.mode(index)) {
-                    Mode.POSITION -> memory[pointer + index]
+                    Mode.POSITION -> memory[pointer + index]!!.toInt()
                     Mode.IMMEDIATE -> pointer + index
-                    Mode.RELATIVE -> relativeBase + memory[pointer + index]
+                    Mode.RELATIVE -> relativeBase + memory[pointer + index]!!.toInt()
                 }
             }
             when (instruction.code) {
-                OpCode.PLUS -> runInstruction(memory, calculatePosition, Int::plus)
-                OpCode.MULTIPLY -> runInstruction(memory, calculatePosition, Int::times)
+                OpCode.PLUS -> runInstruction(memory, calculatePosition, Long::plus)
+                OpCode.MULTIPLY -> runInstruction(memory, calculatePosition, Long::times)
                 OpCode.INPUT -> {
                     val destination = calculatePosition(1)
-                    memory[destination] = readInput()
+                    memory[destination] = readInput().toLong()
                 }
                 OpCode.OUTPUT -> {
                     val source = calculatePosition(1)
-                    writeOutput(memory[source])
+                    writeOutput(memory[source]!!)
                 }
                 OpCode.JUMP_IF_TRUE -> {
-                    nextPointer = jump(memory, nextPointer, calculatePosition) { it != 0 }
+                    nextPointer = jump(memory, nextPointer, calculatePosition) { it != 0L }
                 }
                 OpCode.JUMP_IF_FALSE -> {
-                    nextPointer = jump(memory, nextPointer, calculatePosition) { it == 0 }
+                    nextPointer = jump(memory, nextPointer, calculatePosition) { it == 0L }
                 }
                 OpCode.LESS_THAN -> {
-                    val lessThan = { a: Int, b: Int ->
-                        if (a < b) 1 else 0
+                    val lessThan = { a: Long, b: Long ->
+                        if (a < b) 1L else 0L
                     }
                     runInstruction(memory, calculatePosition, lessThan)
                 }
                 OpCode.EQUALS -> {
-                    val equals = { a: Int, b: Int ->
-                        if (a == b) 1 else 0
+                    val equals = { a: Long, b: Long ->
+                        if (a == b) 1L else 0L
                     }
                     runInstruction(memory, calculatePosition, equals)
                 }
                 OpCode.ADJUST_REL_BASE -> {
                     val parameter = calculatePosition(1)
-                    relativeBase = memory[parameter]
+                    relativeBase += memory[parameter]!!.toInt()
 
                 }
                 OpCode.STOP -> return
@@ -73,27 +84,27 @@ class Program(private val code: List<Int>) {
 
 }
 
-private fun jump(memory: MutableList<Int>,
+private fun jump(memory: MutableMap<Int,Long>,
                  nextPointer: Int,
                  calculatePosition: (Int) -> Int,
-                 condition: (Int) -> Boolean): Int {
+                 condition: (Long) -> Boolean): Int {
     val test = calculatePosition(1)
-    if (condition(memory[test])) {
-        return memory[calculatePosition(2)]
+    if (condition(memory[test]!!)) {
+        return memory[calculatePosition(2)]!!.toInt()
     }
     return nextPointer
 }
 
-private fun runInstruction(program: MutableList<Int>,
+private fun runInstruction(program: MutableMap<Int,Long>,
                            calculatePosition: (Int) -> Int,
-                           operation: (Int, Int) -> Int) {
+                           operation: (Long, Long) -> Long) {
     val first = calculatePosition(1)
     val second = calculatePosition(2)
     val destination = calculatePosition(3)
-    program[destination] = operation.invoke(program[first], program[second])
+    program[destination] = operation.invoke(program[first] ?: 0, program[second] ?: 0)
 }
 
-fun parseInstruction(instruction: Int): Instruction {
+fun parseInstruction(instruction: Long): Instruction {
     val string = instruction.toString()
     val opCode = OpCode.fromCode(string.takeLast(2).toInt())
     val modes = string.dropLast(2).reversed().map {
