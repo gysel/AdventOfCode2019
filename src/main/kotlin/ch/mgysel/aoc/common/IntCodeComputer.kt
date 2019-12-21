@@ -2,15 +2,18 @@ package ch.mgysel.aoc.common
 
 import java.util.*
 
+// TODO get rid of all !!
+// TODO add extension function to read from and write to memory
+
 class Program<T : Number>(code: List<T>) {
     private val code: List<Long> = code.map { it.toLong() }
 
     private val noInput = { throw IllegalStateException("No input expected") }
 
     fun run(): List<Long> {
-        val result = mutableListOf<Long>()
-        run(noInput, { result.add(it) })
-        return result
+        val output = mutableListOf<Long>()
+        run(noInput, { output.add(it) })
+        return output
     }
 
     fun run(input: List<T>): List<Long> {
@@ -27,8 +30,7 @@ class Program<T : Number>(code: List<T>) {
     }
 
     fun run(readInput: () -> T, writeOutput: (Long) -> Unit) {
-        val memory = code.mapIndexed { i, v -> i to v }
-                .toMap().toMutableMap()
+        val memory = createMemory()
 
         var pointer = 0
         var relativeBase = 0
@@ -81,6 +83,11 @@ class Program<T : Number>(code: List<T>) {
             pointer = nextPointer
         }
     }
+
+    private fun createMemory() = code
+            .mapIndexed { i, v -> i to v }
+            .toMap()
+            .toMutableMap()
 
 }
 

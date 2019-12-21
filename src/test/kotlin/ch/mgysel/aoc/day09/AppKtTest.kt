@@ -6,7 +6,6 @@ import ch.mgysel.aoc.common.Program
 import ch.mgysel.aoc.common.parseInstruction
 import io.kotlintest.matchers.string.shouldHaveLength
 import io.kotlintest.shouldBe
-import org.junit.Ignore
 import org.junit.Test
 
 class AppKtTest {
@@ -51,16 +50,16 @@ class AppKtTest {
         program.run().first() shouldBe number
     }
 
+    private val puzzleCode = parseInput()
+    private val puzzleProgram = Program(puzzleCode)
+
     @Test
     fun partOne() {
-        val code = parseInput()
-        val program = Program(code)
-        program.run(1) shouldBe 3906448201
+        puzzleProgram.run(1) shouldBe 3906448201
     }
 
     @Test
-    @Ignore
     fun partTwo() {
-        TODO()
+        puzzleProgram.run(2) shouldBe 59785
     }
 }

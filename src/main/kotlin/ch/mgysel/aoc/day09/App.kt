@@ -13,7 +13,8 @@ fun main() {
     println("part one: $resultOne")
 
     // part two
-    val resultTwo = "TODO"
+    val resultTwo = program.run(2)
+    println("part two: $resultTwo")
 
 }
 
