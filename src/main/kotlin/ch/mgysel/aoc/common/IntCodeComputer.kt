@@ -1,6 +1,13 @@
 package ch.mgysel.aoc.common
 
 class Program(private val code: List<Int>) {
+
+    fun run(input: Int): Int? {
+        var result: Int? = null
+        run({ input }, { result = it })
+        return result
+    }
+
     fun run(readInput: () -> Int, writeOutput: (Int) -> Unit) {
         val memory = code.toMutableList()
 
