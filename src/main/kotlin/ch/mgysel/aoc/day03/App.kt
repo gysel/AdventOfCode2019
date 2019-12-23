@@ -1,5 +1,6 @@
 package ch.mgysel.aoc.day03
 
+import ch.mgysel.aoc.common.Coordinates
 import ch.mgysel.aoc.common.InputData
 import java.util.concurrent.atomic.AtomicInteger
 import kotlin.math.absoluteValue
@@ -66,14 +67,11 @@ enum class Direction {
     UP, DOWN, LEFT, RIGHT
 }
 
-data class Coordinates(val x: Int,
-                       val y: Int) {
-    fun move(direction: Direction): Coordinates = when (direction) {
-        Direction.UP -> copy(y = y + 1)
-        Direction.DOWN -> copy(y = y - 1)
-        Direction.LEFT -> copy(x = x - 1)
-        Direction.RIGHT -> copy(x = x + 1)
-    }
+fun Coordinates.move(direction: Direction): Coordinates = when (direction) {
+    Direction.UP -> copy(y = y + 1)
+    Direction.DOWN -> copy(y = y - 1)
+    Direction.LEFT -> copy(x = x - 1)
+    Direction.RIGHT -> copy(x = x + 1)
 }
 
 fun calculateManhattanDistance(a: Coordinates, b: Coordinates): Int {
