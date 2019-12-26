@@ -3,11 +3,33 @@ package ch.mgysel.aoc.day11
 import ch.mgysel.aoc.common.*
 
 fun main() {
-    // part one
     val code = parseInput()
-
     val program = Program(code)
+
+    // part one
+    val resultOne = runPartOne(program)
+    println("part one: $resultOne")
+
+    // part two
+    val robot = runPartTwo(program)
+    robot.printHull()
+    // should print: UERPRFGJ
+}
+
+fun runPartOne(program: Program<Long>): Int {
     val robot = HullPainingRobot()
+    run(program, robot)
+    return robot.countPaintedTiles()
+}
+
+fun runPartTwo(program: Program<Long>): HullPainingRobot {
+    val robot = HullPainingRobot()
+    robot.paint(Color.WHITE.code)
+    run(program, robot)
+    return robot
+}
+
+private fun run(program: Program<Long>, robot: HullPainingRobot) {
     var counter = 0
     program.run({
         robot.readCurrentColor().code.toLong()
@@ -21,15 +43,6 @@ fun main() {
         }
         counter++
     })
-
-    val resultOne = robot.countPaintedTiles()
-
-    println("part one: $resultOne")
-
-    // part two
-    val resultTwo = "TODO"
-    println("part two: $resultTwo")
-
 }
 
 fun Direction.turnLeft() = when (this) {
@@ -80,6 +93,24 @@ class HullPainingRobot {
     fun readCurrentColor() = paintedTiles.getOrDefault(position, Color.BLACK)
 
     fun countPaintedTiles() = paintedTiles.size
+
+    fun printHull() {
+        val keys = paintedTiles.keys.asSequence()
+        val xAxis = keys.map(Coordinates::x)
+        val yAxis = keys.map(Coordinates::y)
+        val minX = xAxis.min() ?: throw IllegalStateException("No minimum found")
+        val minY = yAxis.min() ?: throw IllegalStateException("No minimum found")
+        val maxX = xAxis.max() ?: throw IllegalStateException("No maximum found")
+        val maxY = yAxis.max() ?: throw IllegalStateException("No maximum found")
+        (maxY downTo minY).forEach { y ->
+            (minX..maxX)
+                    .joinToString(separator = "") { x ->
+                        val color = paintedTiles.getOrDefault(Coordinates(x, y), Color.BLACK)
+                        if (color == Color.WHITE) "X" else " "
+                    }
+                    .let(::println)
+        }
+    }
 }
 
 fun parseInput(): List<Long> = InputData.read("day11-input.txt")
