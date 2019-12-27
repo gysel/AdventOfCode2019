@@ -12,6 +12,12 @@ class AppKtTest {
     }
 
     @Test
+    fun solvePartTwo() {
+        val moons = input()
+        solvePartTwo(moons) shouldBe 484244804958744
+    }
+
+    @Test
     fun providedSample() {
         val moons = listOf(
                 Vector3D(-1, 0, 2),
@@ -26,6 +32,30 @@ class AppKtTest {
         stepOne[1] shouldBe Moon(Vector3D(3, -7, -4), Vector3D(1, 3, 3))
         stepOne[2] shouldBe Moon(Vector3D(1, -7, 5), Vector3D(-3, 1, -3))
         stepOne[3] shouldBe Moon(Vector3D(2, 2, 0), Vector3D(-1, -3, 1))
+    }
+
+    @Test
+    fun providedSampleWithPartTwo() {
+        val moons = listOf(
+                Vector3D(-1, 0, 2),
+                Vector3D(2, -10, -7),
+                Vector3D(4, -8, 8),
+                Vector3D(3, 5, -1))
+                .map { Moon(it) }
+
+        solvePartTwo(moons) shouldBe 2772
+    }
+
+    @Test
+    fun providedSecondSampleWithPartTwo() {
+        val moons = listOf(
+                Vector3D(-8, -10, 0),
+                Vector3D(5, 5, 10),
+                Vector3D(2, -7, 3),
+                Vector3D(9, -8, -3))
+                .map { Moon(it) }
+
+        solvePartTwo(moons) shouldBe 4_686_774_924
     }
 
     @Test

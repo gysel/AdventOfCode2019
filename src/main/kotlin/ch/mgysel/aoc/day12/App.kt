@@ -1,8 +1,10 @@
 package ch.mgysel.aoc.day12
 
 import ch.mgysel.aoc.day12.Vector3D.Companion.ZERO
+import org.apache.commons.math3.util.ArithmeticUtils.lcm
 import kotlin.math.absoluteValue
 import kotlin.math.sign
+import kotlin.reflect.KProperty1
 
 fun main() {
     val moons = input()
@@ -12,6 +14,8 @@ fun main() {
     println("part one: $resultOne")
 
     // part two
+    val resultTwo = solvePartTwo(moons)
+    println("part two: $resultTwo")
 }
 
 fun input(): List<Moon> {
@@ -35,6 +39,31 @@ fun run(moons: List<Moon>, steps: Int): List<Moon> {
         result = calculateStep(result)
     }
     return result
+}
+
+fun solvePartTwo(initialState: List<Moon>): Long {
+    val x = repeatsAfter(initialState, Vector3D::x)
+    val y = repeatsAfter(initialState, Vector3D::y)
+    val z = repeatsAfter(initialState, Vector3D::z)
+    return lcm(lcm(x, y), z)
+}
+
+/**
+ * With some inspiration from https://todd.ginsberg.com/post/advent-of-code/2019/day12/
+ */
+private fun repeatsAfter(initialState: List<Moon>, dimension: KProperty1<Vector3D, Int>): Long {
+    var steps = 0L
+    var state = initialState
+    val initialStateOfDimension = initialState.extractDimension(dimension)
+    while (state.extractDimension(dimension) != initialStateOfDimension || steps == 0L) {
+        state = calculateStep(state)
+        steps++
+    }
+    return steps
+}
+
+fun List<Moon>.extractDimension(dimension: (Vector3D) -> Int): List<Pair<Int, Int>> {
+    return this.map { dimension(it.position) to dimension(it.velocity) }
 }
 
 fun calculateStep(moons: List<Moon>): List<Moon> {
