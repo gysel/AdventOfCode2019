@@ -2,23 +2,45 @@ package ch.mgysel.aoc.day14
 
 import ch.mgysel.aoc.common.InputData
 import kotlin.math.ceil
+import kotlin.math.pow
 
 fun main() {
     val reactions = loadReactions()
+    val catalog = createReactionCatalog(reactions)
 
     // part one
-    val resultOne = produce("1 FUEL".toChemical(), "ORE", reactions)
+    val resultOne = produce("1 FUEL".toChemical(), "ORE", catalog)
     println("part one: $resultOne")
 
     // part two
-    val resultTwo = "TODO"
+    val resultTwo = solvePartTwo(catalog)
     println("part two: $resultTwo")
+}
+
+fun solvePartTwo(catalog: Map<String, Reaction>): Int {
+    val oreAvailable = 10.0.pow(12).toLong()
+    var fuelCounter = 0
+    val result = Result()
+    do {
+        fuelCounter++
+        // idea: start with bigger steps, then use smaller steps as we approach the limit
+        val step = ChemicalAmount("FUEL", 1)
+        produce(step, "ORE", catalog, result)
+        // println("$fuelCounter FUEL requires ${result.countUsedOre()} ORE")
+    } while (result.countUsedOre() < oreAvailable)
+    return fuelCounter - 1
 }
 
 class Result {
 
     private val leftovers = mutableMapOf<String, Int>()
-    var usedOre = 0
+    private var usedOre = 0L
+
+    fun addUsedOre(amount: Int) {
+        usedOre += amount
+    }
+
+    fun countUsedOre() = usedOre
 
     fun addLeftovers(chemicalAmount: ChemicalAmount) {
         updateAmount(chemicalAmount.chemical) { it + chemicalAmount.amount }
@@ -44,17 +66,16 @@ class Result {
 
 }
 
-fun produce(target: ChemicalAmount, withChemical: String, reactions: List<Reaction>): Int {
-    val catalog = reactions.associateBy { it.output.chemical }
+fun produce(target: ChemicalAmount, withChemical: String, catalog: Map<String, Reaction>): Long {
     val result = Result()
     produce(target, withChemical, catalog, result)
-    return result.usedOre
+    return result.countUsedOre()
 }
 
 
 fun produce(target: ChemicalAmount, withChemical: String, catalog: Map<String, Reaction>, result: Result) {
     if (target.chemical == withChemical) {
-        result.usedOre += target.amount
+        result.addUsedOre(target.amount)
     } else {
         catalog[target.chemical]?.let { reaction ->
             val toProduce = target - result.useLeftovers(target)
@@ -119,3 +140,6 @@ fun parseReaction(line: String): Reaction {
 fun parseInput() = InputData.readLines("day14-input.txt")
 
 fun loadReactions() = parseInput().map(::parseReaction)
+
+fun createReactionCatalog(reactions: List<Reaction>) =
+        reactions.associateBy { it.output.chemical }

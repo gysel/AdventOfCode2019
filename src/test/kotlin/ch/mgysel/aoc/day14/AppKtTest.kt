@@ -1,9 +1,23 @@
 package ch.mgysel.aoc.day14
 
 import io.kotlintest.shouldBe
+import org.junit.Ignore
 import org.junit.Test
 
 class AppKtTest {
+
+    private val catalog = createReactionCatalog(loadReactions())
+
+    @Test
+    fun `part one`() {
+        produce("1 FUEL".toChemical(), "ORE", catalog) shouldBe 870051
+    }
+
+    @Test
+    @Ignore("slow test")
+    fun `part two`() {
+        solvePartTwo(catalog) shouldBe 1863741
+    }
 
     @Test
     fun `parse reaction from input line`() {
@@ -44,12 +58,8 @@ class AppKtTest {
         produce("1 FUEL".toChemical(), "ORE", reactions) shouldBe 165
     }
 
-    @Test
-    fun `part one`() {
-        val reactions = loadReactions()
-        produce("1 FUEL".toChemical(), "ORE", reactions) shouldBe 870051
-    }
-
-    private fun String.parseReactions() = this.trimIndent().lines().map(::parseReaction)
+    private fun String.parseReactions() = this.trimIndent().lines()
+            .map(::parseReaction)
+            .let(::createReactionCatalog)
 
 }
