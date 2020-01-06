@@ -3,6 +3,8 @@ package ch.mgysel.aoc.day08
 import ch.mgysel.aoc.common.InputData
 import ch.mgysel.aoc.common.verify
 
+typealias Layer = List<Int>
+
 fun main() {
     // part one
     val pixels = InputData.read("day08-input.txt").map { char -> char.toString().toInt() }
@@ -10,7 +12,7 @@ fun main() {
     val height = 6
     val pixelsPerLayer = width * height
     verify(pixels.size % pixelsPerLayer, 0, "uneven pixel number")
-    val layers = pixels.chunked(pixelsPerLayer)
+    val layers: List<Layer> = pixels.chunked(pixelsPerLayer)
     println("Found ${layers.size} layers")
 
     val countZero = { layer: List<Int> -> layer.count(0) }
@@ -21,23 +23,22 @@ fun main() {
     verify(resultOne, 1862, "part one")
 
     // part two
-    val merged = mergeLayers(layers)
-
     println("part two:")
-    printImage(merged, width)
+    mergeLayers(layers)
+            .printImage(width)
 }
 
-private fun printImage(merged: List<Int>, width: Int) {
+private fun Layer.printImage(width: Int) {
     println()
-    merged.chunked(width)
+    this.chunked(width)
             .map { line -> line.joinToString("") { if (it == 0) " " else "X" } }
             .forEach(::println)
     println()
 }
 
-fun mergeLayers(layers: List<List<Int>>): List<Int> {
+fun mergeLayers(layers: List<Layer>): Layer {
     return (layers.first().indices).map { i ->
-        layers.map { it[i] }.first { it != 2 }
+        layers.asSequence().map { it[i] }.first { it != 2 }
     }
 }
 
